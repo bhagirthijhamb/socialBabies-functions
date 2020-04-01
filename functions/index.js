@@ -24,3 +24,23 @@ exports.getBabbles = functions.https.onRequest((req, res) => {
     })
     .catch(err => console.log(err));
 });
+
+exports.createBabbles = functions.https.onRequest((req, res) => {
+    const newBabble = {
+        body: req.body.body,
+        userHandle: req.body.userHandle,
+        createdAt: admin.firestore.Timestamp.fromDate(new Date())
+    };
+
+    admin
+        .firestore()
+        .collection('babbles')
+        .add(newBabble)
+        .then(doc => {
+            return res.json({message: `document ${doc.id} created successfully.`});
+        })
+        .catch(err => {
+            res.status(500).json({error: `Something went wrong`});
+            console.log(err);
+        });
+});
