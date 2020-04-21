@@ -1,7 +1,11 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const express = require('express');
 
 admin.initializeApp();
+const app = express();
+
+exports.api = functions.https.onRequest(app);
 
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -10,22 +14,22 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
  response.send("Hello from Firebase!");
 });
 
-exports.getBabbles = functions.https.onRequest((req, res) => {
+app.get('/babbles', (req, res) => {
     admin
-    .firestore()
-    .collection('babbles')
-    .get()
-    .then(data => {
-        let babbles = [];
-        data.forEach((doc) => {
-            babbles.push(doc.data());
-        });
-        return res.json(babbles);
-    })
-    .catch(err => console.log(err));
+        .firestore()
+        .collection('babbles')
+        .get()
+        .then(data => {
+            let babbles = [];
+            data.forEach((doc) => {
+                babbles.push(doc.data());
+            });
+            return res.json(babbles);
+        })
+        .catch(err => console.log(err));
 });
 
-exports.createBabbles = functions.https.onRequest((req, res) => {
+app.post('/babble', (req, res) => {
     const newBabble = {
         body: req.body.body,
         userHandle: req.body.userHandle,
