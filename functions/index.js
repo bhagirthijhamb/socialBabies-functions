@@ -1,10 +1,10 @@
 const functions = require('firebase-functions');
 const express = require('express');
 
-const FbAuth = require('./util/fbAuth');
+const FBAuth = require('./util/fbAuth');
 
 const { getAllBabbles, postOneBabble } = require('./handlers/babbles')
-const { signup, login } = require('./handlers/users')
+const { signup, login, uploadImage } = require('./handlers/users')
 
 const app = express();
 
@@ -62,7 +62,8 @@ app.post('/babble', FBAuth, postOneBabble);
 
 // Users Route
 app.post('/signup', signup);
-app.post(`/login`, login)
+app.post(`/login`, login);
+app.post('/user/image', FBAuth, uploadImage);
 
 // exports.api = functions.region('us-central1).https.onRequest(app);
 exports.api = functions.https.onRequest(app);
