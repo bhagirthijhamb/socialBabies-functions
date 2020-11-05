@@ -10,7 +10,6 @@ if (!firebase.apps.length) {
   firebase.initializeApp(config);
 }
 
-
 const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators')
 
 // Sign user up
@@ -129,8 +128,28 @@ router.post('/user', FBAuth, (req, res) => {
 });
 
 // Get own user details
-router.get('/user', (req, res) => {
-  
+router.get('/user', FBAuth, (req, res) => {
+  let userData = {};
+  db.doc(`/users/${ req.user.handle }`).get()
+    .then(doc => {
+      console.log('inside first then...');
+        // if(doc.exists){
+          userData.credentials = doc.data();
+          return db.collection('likes').where('userHandle', '==', req.user.handle).get();
+        // }
+        // return null;
+    })
+    .then(data => {
+      userData.likes = [];
+      data.forEach(doc => {
+        userData.likes.push(doc.data());
+      });
+      return res.json(userData);
+    })
+    .catch(err => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    })
 });
 
 // Upload profile image for user

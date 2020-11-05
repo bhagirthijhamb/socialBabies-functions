@@ -12,15 +12,14 @@ const FBAuth = require('./../util/fbAuth');
 
 // exports.getAllBabbles = (req, res) => {
 router.get('/', (req, res) => {
-  console.log('Get babbles...')
   admin
     .firestore()
     .collection("babbles")
     .orderBy("createdAt", "desc")
     .get()
-    .then((data) => {
+    .then((babblesData) => {
       let babbles = [];
-      data.forEach((doc) => {
+      babblesData.forEach((doc) => {
         babbles.push({
           babbleId: doc.id,
           body: doc.data().body,
