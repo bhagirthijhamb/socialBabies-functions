@@ -27,6 +27,24 @@ let db = {
             website: 'https://baby1.com',
             location: 'Toronto, Ontario'
        }
+    ],
+
+    // babbles: [
+    //     {
+    //         userHandle: 'baby1',
+    //         body: 'This is a sample babble',
+    //         createdAt: '2020-04-21T23:14:29.112Z',
+    //         likeCount: 5,
+    //         commentCount: 3
+    //     }
+    // ],
+    comments: [
+        {
+            userHandle: 'baby4',
+            babbleId: 'Sm7LZQoFhyQPa9uaFOzdfc9py9w1',
+            body: 'nice pic baby...',
+            createdAt: '2020-04-21T23:14:29.112Z',
+        }
     ]
 }
 

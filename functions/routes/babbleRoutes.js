@@ -54,4 +54,29 @@ router.post('/babble', FBAuth, (req, res) => {
     });
 });
 
+router.get('/:babbleId', (req, res) => {
+  let babbleData = {};
+  db.doc(`/babbles/${ req.params.babbleId }`).get()
+    .then(doc => {
+      if(!doc.exists){
+        return res.status(404).json({ error: 'Babble not found' })
+      }
+      babbleData = doc.data();
+      babbleData.babbleId = doc.id;
+      return db.collection('comments').where('babbleId', '==', req.params.babbleId).get()
+    })
+    .then(data => {
+      babbleData.comments = [];
+      console.log('inside comments section...')
+      data.forEach(doc => {
+        babbleData.comments.push(doc.data());
+      });
+      return res.json(babbleData);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: err.code });
+    })
+})
+
 module.exports = router;
