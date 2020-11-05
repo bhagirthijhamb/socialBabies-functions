@@ -1,11 +1,18 @@
-const { db } = require('./../util/admin');
-
-const config = require('./../util/config');
+const express = require('express');
+const router = express.Router();
+const { admin, db } = require('../util/admin');
+const config = require('../util/config');
 
 const firebase = require('firebase');
-firebase.initializeApp(config);
+if (!firebase.apps.length) {
+  firebase.initializeApp(config);
+}
 
-exports.getAllBabbles = (req, res) => {
+const FBAuth = require('./../util/fbAuth');
+
+// exports.getAllBabbles = (req, res) => {
+router.get('/', (req, res) => {
+  console.log('Get babbles...')
   admin
     .firestore()
     .collection("babbles")
@@ -24,9 +31,10 @@ exports.getAllBabbles = (req, res) => {
       return res.json(babbles);
     })
     .catch((err) => console.log(err));
-};
+});
 
-exports.postOneBabble = (req, res) => {
+// exports.postOneBabble = (req, res) => {
+router.post('/babble', FBAuth, (req, res) => {
   const newBabble = {
     body: req.body.body,
     // userHandle: req.body.userHandle,
@@ -45,4 +53,6 @@ exports.postOneBabble = (req, res) => {
       res.status(500).json({ error: `Something went wrong` });
       console.log(err);
     });
-};
+});
+
+module.exports = router;

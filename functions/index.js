@@ -1,17 +1,30 @@
 const functions = require('firebase-functions');
 const express = require('express');
+const userRouter = require('./routes/userRoutes');
+const babbleRouter = require('./routes/babbleRoutes');
 
-const FBAuth = require('./util/fbAuth');
 
-const { getAllBabbles, postOneBabble } = require('./handlers/babbles')
-const { signup, login, uploadImage, addUserDetails } = require('./handlers/users')
+// const FBAuth = require('./util/fbAuth');
+
+// const { getAllBabbles, postOneBabble } = require('./handlers/babbles')
+// const { signup, login, uploadImage, addUserDetails, getAuthenticatedUser } = require('./handlers/users')
 
 const app = express();
 
+app.use('/users', userRouter);
+app.use('/babbles', babbleRouter);
 
 
 // Create and Deploy Your First Cloud Functions
 // https://firebase.google.com/docs/functions/write-firebase-functions
+
+// Firebase Could Functions
+// There are several different types of cloud functions that can be created and they are trigerred in different ways
+// database events, auth event, storage events, analytics events - Background Triggers because these these are events that occur in the background of your app.
+// We can also call function directly via an https endpoint mush like an api end point or programmatic call directly from our code
+// these are both known as http triggers. These ar e both used to direclty invoke a cloud function.
+
+// In this tutorail we will se how to set up an http function which we can trigger via an end point directly in the browser.. Then we will see callable function from the code.
 
 // exports.helloWorld = functions.https.onRequest((request, response) => {
     //  response.send("Hello from Firebase!");
@@ -57,14 +70,16 @@ const app = express();
 
 
 // Babble Routes
-app.get('/babbles', getAllBabbles);
-app.post('/babble', FBAuth, postOneBabble);
+// app.get('/babbles', getAllBabbles);
+// app.post('/babble', FBAuth, postOneBabble);
+
 
 // Users Route
-app.post('/signup', signup);
-app.post(`/login`, login);
-app.post('/user/image', FBAuth, uploadImage);
-app.post('/user', FBAuth, addUserDetails);
+// app.post('/signup', signup);
+// app.post(`/login`, login);
+// app.post('/user/image', FBAuth, uploadImage);
+// app.post('/user', FBAuth, addUserDetails);
+// app.get('./user', FBAuth, getAuthenticatedUser)
 
 // exports.api = functions.region('us-central1).https.onRequest(app);
 exports.api = functions.https.onRequest(app);

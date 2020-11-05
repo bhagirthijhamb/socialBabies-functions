@@ -53,6 +53,7 @@ exports.validateLoginData = data => {
     };
 }
 
+// Not mandatory
 exports.reduceUserDetails = data => {
   let userDetails = {};
   if(!isEmpty(data.bio.trim())){

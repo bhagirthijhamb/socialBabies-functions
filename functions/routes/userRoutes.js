@@ -1,18 +1,21 @@
-const { admin, db } = require('./../util/admin');
-
-const config = require("./../util/config");
-
+const express = require('express');
+const router = express.Router();
+const { admin, db } = require('../util/admin');
+const config = require("../util/config");
 const firebase = require("firebase");
+
+const FBAuth = require('./../util/fbAuth');
 
 if (!firebase.apps.length) {
   firebase.initializeApp(config);
 }
 
 
-const { validateSignupData, validateLoginData, reduceUserDetails } = require('./../util/validators')
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators')
 
-// SIgn user up
-exports.signup = (req, res) => {
+// Sign user up
+// exports.signup = (req, res) => {
+router.post('/signup', (req, res) => {
   const newUser = {
     email: req.body.email,
     password: req.body.password,
@@ -78,10 +81,10 @@ exports.signup = (req, res) => {
   //         console.error(err);
   //         return res.status(500).json({error: err.code});
   //     });
-};
+});
 
 // Log user in
-exports.login = (req, res) => {
+router.post('/login', (req, res) => {
   const user = {
     email: req.body.email,
     password: req.body.password,
@@ -109,10 +112,10 @@ exports.login = (req, res) => {
         return res.status(500).json({ error: err.code });
       }
     });
-};
+});
 
 // Add user details
-exports.addUserDetails = (req, res) => {
+router.post('/user', FBAuth, (req, res) => {
   let userDetails = reduceUserDetails(req.body);
 
   db.doc(`/users/${req.user.handle}`).update(userDetails)
@@ -123,10 +126,15 @@ exports.addUserDetails = (req, res) => {
       console.log(err);
       return res.status(500).json({ error: err.code });
     })
-}
+});
+
+// Get own user details
+router.get('/user', (req, res) => {
+  
+});
 
 // Upload profile image for user
-exports.uploadImage = (req, res) => {
+router.post('/user/image', FBAuth, (req, res) => {
   const BusBoy = require('busboy');
   const path = require('path');
   const os = require('os');
@@ -172,4 +180,6 @@ exports.uploadImage = (req, res) => {
     });
   });
   busboy.end(req.rawBody);
-}
+});
+
+module.exports = router;

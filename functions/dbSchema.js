@@ -29,3 +29,27 @@ let db = {
        }
     ]
 }
+
+const useDetails = {
+    // Redux data
+    credentials: {
+        userId: 'Mfkdl46jksdfjlkgsk4glskdgl4',
+        email: 'baby12email.com',
+        handle: 'user',
+        createdAt: '2020-10-19T15:02:13.709Z',
+        imageUrl: 'image/hdjsdkfjsdkjfslkfjslkfjdskfkd',
+        bio: 'Hello, my name is baby1, nice to meet you',
+        website: 'https://user.com',
+        location: 'Toronto, ON'
+    },
+    likes: [
+        {
+            useHandle: 'bay2',
+            screamId: 'gdfgfgs84u4oij348guij4'
+        },
+        {
+            useHandle: 'baby7',
+            screamId: 'gdfgfgs84u4oij348guij4'
+        }
+    ]
+}
