@@ -63,7 +63,7 @@ router.get('/:babbleId', (req, res) => {
       }
       babbleData = doc.data();
       babbleData.babbleId = doc.id;
-      return db.collection('comments').where('babbleId', '==', req.params.babbleId).get()
+      return db.collection('comments').orderBy('createdAt', 'desc').where('babbleId', '==', req.params.babbleId).get()
     })
     .then(data => {
       babbleData.comments = [];
