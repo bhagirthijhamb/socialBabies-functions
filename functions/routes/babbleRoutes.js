@@ -155,7 +155,7 @@ router.get('/:babbleId/like', FBAuth, (req, res) => {
 
 router.get('/:babbleId/unlike', FBAuth, (req, res) => {
   const babbleDocument = db.doc(`/babbles/${req.params.babbleId}`);
-  const likeDocument = db.collection('likes').where('userHandle', '==', req.user.userHandle).where('babbleId', '==', req.params.babbleId).limit(1);
+  const likeDocument = db.collection('likes').where('userHandle', '==', req.user.handle).where('babbleId', '==', req.params.babbleId).limit(1);
   let babbleData;
   babbleDocument.get()
     .then(doc => {
@@ -173,7 +173,7 @@ router.get('/:babbleId/unlike', FBAuth, (req, res) => {
         return res.status(400).json({ error: 'Babble not liked.' });
       }
       else {
-        return db.doc(`/likes/${data.docs[0].data().id}`).delete()
+        return db.doc(`/likes/${data.docs[0].id}`).delete()
           .then(() => {
             babbleData.likeCount--;
             return babbleDocument.update({ likeCount: babbleData.likeCount });
