@@ -9,6 +9,7 @@ if (!firebase.apps.length) {
 }
 
 const FBAuth = require('./../util/fbAuth');
+const { region } = require('firebase-functions');
 
 // exports.getAllBabbles = (req, res) => {
 router.get('/', (req, res) => {
@@ -63,11 +64,12 @@ router.get('/:babbleId', (req, res) => {
       }
       babbleData = doc.data();
       babbleData.babbleId = doc.id;
-      return db.collection('comments').orderBy('createdAt', 'desc').where('babbleId', '==', req.params.babbleId).get()
+      // return db.collection('comments').orderBy('createdAt', 'desc').where('babbleId', '==', req.params.babbleId).get()
+      return db.collection('comments').where('babbleId', '==', req.params.babbleId).get()
     })
     .then(data => {
       babbleData.comments = [];
-      console.log('inside comments section...')
+      // console.log('inside comments section...')
       data.forEach(doc => {
         babbleData.comments.push(doc.data());
       });
@@ -76,6 +78,33 @@ router.get('/:babbleId', (req, res) => {
     .catch(err => {
       console.log(err);
       res.status(500).json({ error: err.code });
+    })
+})
+
+router.post('/:babbleId/comment', FBAuth, (req, res) => {
+  if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty'});
+
+  const newComment = {
+    body: req.body.body,
+    createdAt: new Date().toISOString(),
+    screamId: req.params.babbleId,
+    userHandle: req.user.handle,
+    userImage: req.user.imageUrl
+  }
+
+  db.doc(`babbles/${req.params.babbleId}`).get()
+    .then(doc => {
+      if(!doc.exists){
+        return res.status(404).json({ error: 'Scream not found' });
+      }
+      return db.collection('comments').add(newComment);
+    })
+    .then(() => {
+      return res.json(newComment);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ error: 'Something went wrong' });
     })
 })
 

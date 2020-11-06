@@ -62,11 +62,11 @@ const useDetails = {
     },
     likes: [
         {
-            useHandle: 'baby2',
+            userHandle: 'baby2',
             screamId: 'gdfgfgs84u4oij348guij4'
         },
         {
-            useHandle: 'baby7',
+            userHandle: 'baby7',
             screamId: 'gdfgfgs84u4oij348guij4'
         }
     ]
