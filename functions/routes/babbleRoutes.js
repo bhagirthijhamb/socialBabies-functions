@@ -11,7 +11,7 @@ if (!firebase.apps.length) {
 const FBAuth = require('./../util/fbAuth');
 const { region } = require('firebase-functions');
 
-// exports.getAllBabbles = (req, res) => {
+// Get all the babbles
 router.get('/', (req, res) => {
   admin
     .firestore()
@@ -61,6 +61,7 @@ router.post('/babble', FBAuth, (req, res) => {
     });
 });
 
+// Get a babble
 router.get('/:babbleId', (req, res) => {
   let babbleData = {};
   db.doc(`/babbles/${ req.params.babbleId }`).get()
@@ -87,6 +88,7 @@ router.get('/:babbleId', (req, res) => {
     })
 })
 
+// Comment on a babble
 router.post('/:babbleId/comment', FBAuth, (req, res) => {
   if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty'});
 
@@ -101,8 +103,12 @@ router.post('/:babbleId/comment', FBAuth, (req, res) => {
   db.doc(`babbles/${req.params.babbleId}`).get()
     .then(doc => {
       if(!doc.exists){
-        return res.status(404).json({ error: 'Scream not found' });
+        return res.status(404).json({ error: 'Babble not found' });
       }
+      // return db.collection('comments').add(newComment);
+      return doc.ref.update({ commentCount: doc.data().commentCount + 1 })
+    })
+    .then(() => {
       return db.collection('comments').add(newComment);
     })
     .then(() => {
@@ -114,45 +120,47 @@ router.post('/:babbleId/comment', FBAuth, (req, res) => {
     })
 })
 
+// Like a Babble
 router.get('/:babbleId/like', FBAuth, (req, res) => {
   const babbleDocument = db.doc(`/babbles/${req.params.babbleId}`);
   const likeDocument = db.collection('likes').where('userHandle', '==', req.user.handle).where('babbleId', '==', req.params.babbleId).limit(1);
   let babbleData;
   babbleDocument.get()
-    .then(doc => {
-      if(doc.exists){
-        babbleData = doc.data();
-        babbleData.babbleId = doc.id;
-        return likeDocument.get();
-      }
-      else{
-        return res.status(404).json({ error: 'Babble not found.'});
-      }
-    })
-    .then(data => {
-      if(data.empty){
-        return db.collection('likes').add({
-          babbleId: req.params.babbleId,
-          userHandle: req.user.handle
-        })
-        .then(() => {
-          babbleData.likeCount++;
-          return babbleDocument.update({ likeCount: babbleData.likeCount})
-        })
-        .then(() => {
-          return res.json(babbleData);
-        })
-      }
-      else {
-        return res.status(400).json({ error: 'Babble already liked.' });
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      res.status(500).json({ error: err.code });
-    })
+  .then(doc => {
+    if(doc.exists){
+      babbleData = doc.data();
+      babbleData.babbleId = doc.id;
+      return likeDocument.get();
+    }
+    else{
+      return res.status(404).json({ error: 'Babble not found.'});
+    }
+  })
+  .then(data => {
+    if(data.empty){
+      return db.collection('likes').add({
+        babbleId: req.params.babbleId,
+        userHandle: req.user.handle
+      })
+      .then(() => {
+        babbleData.likeCount++;
+        return babbleDocument.update({ likeCount: babbleData.likeCount})
+      })
+      .then(() => {
+        return res.json(babbleData);
+      })
+    }
+    else {
+      return res.status(400).json({ error: 'Babble already liked.' });
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    res.status(500).json({ error: err.code });
+  })
 })
 
+// Unlike a Babble
 router.get('/:babbleId/unlike', FBAuth, (req, res) => {
   const babbleDocument = db.doc(`/babbles/${req.params.babbleId}`);
   const likeDocument = db.collection('likes').where('userHandle', '==', req.user.handle).where('babbleId', '==', req.params.babbleId).limit(1);
