@@ -95,7 +95,7 @@ router.post('/:babbleId/comment', FBAuth, (req, res) => {
   const newComment = {
     body: req.body.body,
     createdAt: new Date().toISOString(),
-    screamId: req.params.babbleId,
+    babbleId: req.params.babbleId,
     userHandle: req.user.handle,
     userImage: req.user.imageUrl
   }
@@ -194,6 +194,29 @@ router.get('/:babbleId/unlike', FBAuth, (req, res) => {
     .catch(err => {
       console.error(err);
       res.status(500).json({ error: err.code });
+    })
+})
+
+// Delete a babble
+router.delete('/:babbleId', FBAuth, (req, res) => {
+  const document = db.doc(`/babbles/${req.params.babbleId}`);
+  document.get()
+    .then(doc => {
+      if(!doc.exists){
+        return res.status(404).json({ error: `Babble not found`})
+      }
+      if(doc.data().userHandle !== req.user.handle){
+        return res.status(403).json({ error: 'Unauthorised' });
+      } else {
+        return document.delete();
+      }
+    })
+    .then(() => {
+      return res.json({ message: 'Babble deleted successfully' });
+    })
+    .catch(err => {
+      console.error(err);
+      res.json({ error: err.error });
     })
 })
 

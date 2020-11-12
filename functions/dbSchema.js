@@ -29,21 +29,23 @@ let db = {
        }
     ],
 
-    // babbles: [
-    //     {
-    //         userHandle: 'baby1',
-    //         body: 'This is a sample babble',
-    //         createdAt: '2020-04-21T23:14:29.112Z',
-    //         likeCount: 5,
-    //         commentCount: 3
-    //     }
-    // ],
     comments: [
         {
             userHandle: 'baby4',
             babbleId: 'Sm7LZQoFhyQPa9uaFOzdfc9py9w1',
             body: 'nice pic baby...',
             createdAt: '2020-04-21T23:14:29.112Z',
+        }
+    ],
+
+    notifications: [
+        {
+            recipient: 'user',
+            sender: 'john',
+            read: 'true | false',
+            babbleId: 'jdjflk4j544lkmflkfm',
+            type: 'like | comment',
+            createdAt: '2020-04-21T23:14:29.112Z'
         }
     ]
 }
