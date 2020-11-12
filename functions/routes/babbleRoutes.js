@@ -220,4 +220,8 @@ router.delete('/:babbleId', FBAuth, (req, res) => {
     })
 })
 
+router.post('/notifications', FBAuth, (req, res) => {
+
+})
+
 module.exports = router;
