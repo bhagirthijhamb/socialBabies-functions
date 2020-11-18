@@ -26,6 +26,9 @@ router.get('/', (req, res) => {
           body: doc.data().body,
           userHandle: doc.data().userHandle,
           createdAt: doc.data().createdAt,
+          commentCount: doc.data().commentCount,
+          likeCount: doc.data().likeCount,
+          userImage: doc.data().userImage
         });
       });
       return res.json(babbles);
@@ -39,7 +42,7 @@ router.post('/babble', FBAuth, (req, res) => {
     body: req.body.body,
     // userHandle: req.body.userHandle,
     userHandle: req.user.handle,
-    useImage: req.user.imageUrl,
+    userImage: req.user.imageUrl,
     createdAt: new Date().toISOString(),
     likeCount: 0,
     commentCount: 0,
@@ -51,6 +54,7 @@ router.post('/babble', FBAuth, (req, res) => {
     .add(newBabble)
     .then((doc) => {
       const resBabble = newBabble;
+      // add babble document id to the response
       resBabble.babbleId = doc.id;
       // return res.json({ message: `document ${doc.id} created successfully.` });
       return res.json(resBabble);
@@ -72,11 +76,15 @@ router.get('/:babbleId', (req, res) => {
       babbleData = doc.data();
       babbleData.babbleId = doc.id;
       // return db.collection('comments').orderBy('createdAt', 'desc').where('babbleId', '==', req.params.babbleId).get()
+      
+      // get comments related to the request babble
       return db.collection('comments').where('babbleId', '==', req.params.babbleId).get()
     })
     .then(data => {
       babbleData.comments = [];
       // console.log('inside comments section...')
+
+      // populate the comments into babbleData
       data.forEach(doc => {
         babbleData.comments.push(doc.data());
       });
@@ -90,7 +98,7 @@ router.get('/:babbleId', (req, res) => {
 
 // Comment on a babble
 router.post('/:babbleId/comment', FBAuth, (req, res) => {
-  if(req.body.body.trim() === '') return res.status(400).json({ error: 'Must not be empty'});
+  if(req.body.body.trim() === '') return res.status(400).json({ comment: 'Must not be empty'});
 
   const newComment = {
     body: req.body.body,
@@ -124,40 +132,41 @@ router.post('/:babbleId/comment', FBAuth, (req, res) => {
 router.get('/:babbleId/like', FBAuth, (req, res) => {
   const babbleDocument = db.doc(`/babbles/${req.params.babbleId}`);
   const likeDocument = db.collection('likes').where('userHandle', '==', req.user.handle).where('babbleId', '==', req.params.babbleId).limit(1);
+  
   let babbleData;
   babbleDocument.get()
-  .then(doc => {
-    if(doc.exists){
-      babbleData = doc.data();
-      babbleData.babbleId = doc.id;
-      return likeDocument.get();
-    }
-    else{
-      return res.status(404).json({ error: 'Babble not found.'});
-    }
-  })
-  .then(data => {
-    if(data.empty){
-      return db.collection('likes').add({
-        babbleId: req.params.babbleId,
-        userHandle: req.user.handle
-      })
-      .then(() => {
-        babbleData.likeCount++;
-        return babbleDocument.update({ likeCount: babbleData.likeCount})
-      })
-      .then(() => {
-        return res.json(babbleData);
-      })
-    }
-    else {
-      return res.status(400).json({ error: 'Babble already liked.' });
-    }
-  })
-  .catch(err => {
-    console.error(err);
-    res.status(500).json({ error: err.code });
-  })
+    .then(doc => {
+      if(doc.exists){
+        babbleData = doc.data();
+        babbleData.babbleId = doc.id;
+        return likeDocument.get();
+      }
+      else{
+        return res.status(404).json({ error: 'Babble not found.'});
+      }
+    })
+    .then(data => {
+      if(data.empty){
+        return db.collection('likes').add({
+          babbleId: req.params.babbleId,
+          userHandle: req.user.handle
+        })
+        .then(() => {
+          babbleData.likeCount++;
+          return babbleDocument.update({ likeCount: babbleData.likeCount})
+        })
+        .then(() => {
+          return res.json(babbleData);
+        })
+      }
+      else {
+        return res.status(400).json({ error: 'Babble already liked.' });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: err.code });
+    })
 })
 
 // Unlike a Babble
@@ -220,8 +229,6 @@ router.delete('/:babbleId', FBAuth, (req, res) => {
     })
 })
 
-router.post('/notifications', FBAuth, (req, res) => {
 
-})
 
 module.exports = router;

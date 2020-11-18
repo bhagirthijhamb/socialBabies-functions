@@ -87,10 +87,10 @@ exports.api = functions.https.onRequest(app);
 
 exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
     .onCreate(snapshot => {
-        db.doc(`/babbles/${snapshot.data().babbleId}`)
+        return db.doc(`/babbles/${snapshot.data().babbleId}`)
             .get()
             .then(doc => {
-                // if(doc.exists){
+                if(doc.exists && doc.data().userHandle !== snapshot.data().userHandle){
                     return db.doc(`/notifications/${snapshot.id}`)
                         .set({
                             babbleId: doc.id,
@@ -100,24 +100,23 @@ exports.createNotificationOnLike = functions.firestore.document('likes/{id}')
                             type: 'like',
                             read: false,
                         })
-                // }
+                } else {
+                    return res.status(400).json({ message: "babble doesn't exist" })
+                }
             })
-            .then(() => {
-                return;
-            })
-            .catch(err => {
-                console.log(err);
-                return;
-            })
+            // .then(() => {
+            //     return;
+            // })
+            .catch(err => console.log(err))
     })
 
 exports.deleteNotificationOnUnlike = functions.firestore.document('likes/{id}')
     .onDelete(snapshot => {
-        db.doc(`/notifications/${snapshot.id}`)
+        return  db.doc(`/notifications/${snapshot.id}`)
             .delete()
-            .then(() => {
-                return;
-            })
+            // .then(() => {
+            //     return;
+            // })
             .catch(err => {
                 console.error(err);
                 return;
@@ -125,47 +124,78 @@ exports.deleteNotificationOnUnlike = functions.firestore.document('likes/{id}')
     })
 
 exports.createNotificationOnComment = functions.firestore.document('comments/{id}')
-    .onCreate(snapshot => {
-        db.doc(`/babbles/${snapshot.data().babbleId}`)
-            .get()
-            .then(doc => {
-                // if(doc.exists){
-                    return db.doc(`/notifications/${snapshot.id}`).set({
-                        babbleId: doc.id,
-                        createdAt: new Date().toISOString(),
-                        sender: snapshot.data().userHandle,
-                        recipient: doc.data().userHandle,
-                        type: 'comment',
-                        read: false,
-                    })
-                // }
+.onCreate(snapshot => {
+    return db.doc(`/babbles/${snapshot.data().babbleId}`)
+    .get()
+    .then(doc => {
+        if(doc.exists && doc.data().userHandle !== snapshot.data().userHandle){
+            return db.doc(`/notifications/${snapshot.id}`).set({
+                babbleId: doc.id,
+                createdAt: new Date().toISOString(),
+                sender: snapshot.data().userHandle,
+                recipient: doc.data().userHandle,
+                type: 'comment',
+                read: false,
             })
-            .then(() => {
-                return;
-            })
-            .catch(err => {
-                console.log(err);
-                return;
-            })
+        } else {
+            return res.status(400).json({ message: "babble doesn't exist" })
+        }
     })
-
-exports.markNotificationsRead = (req, res) => {
-    let batch = db.batch();
-    req.body.forEach(notificationId => {
-        const notification = db.doc(`/notifications/${notificationId}`);
-        batch.update(notification, { read: true });
-    });
-    batch.commit()
-        .then(() => {
-            return res.json({ message: 'Notifications marked read' });
+    // .then(() => {
+        //     return;
+        // })
+        .catch(err => {
+            console.log(err);
+            return;
         })
-        .catch((err) => {
-            console.error(err);
-            return res.status(500).json({ error: err.code });
-        })
-}
-
-
-
-
-
+    })
+    
+// if the user updates his profile pics, this db trigger will change the user image of all the babbles by this user
+exports.onImageChange = functions.firestore.document('/users/{id}')
+    .onUpdate((change) => {
+        console.log(change.before.data());
+        console.log(change.after.data());
+        if(change.before.data().imageUrl !== change.after.data().imageUrl){
+            console.log('Image has changed')
+            const batch = db.batch();
+            return db.collection('babbles').where('userHandle', '==', change.before.data().handle).get()
+                .then(data => {
+                    data.forEach(doc => {
+                        const babble = db.doc(`/babbles/${doc.id}`);
+                        batch.update(babble, { userImage: change.after.data().imageUrl })
+                    })
+                    return batch.commit();
+                })
+        } else return true;
+    })
+    
+    
+// if a user deletes a babble, delete all the likes, comments and notification documents related to that babble.
+exports.onBabbleDelete = functions.firestore.document('babbles/{babbleId}')
+    .onDelete((snapshot, context) => {
+        const babbleId = context.params.babbleId;
+        const batch = db.batch();
+        return db.collection('comments').where('babbleId', '==', babbleId).get()
+            .then(data => {
+                data.forEach(doc => {
+                    batch.delete(db.doc(`/comments/${doc.id}`))
+                })
+                return db.collection('likes').where('babbleId', '==', babbleId).get()
+            })
+            .then(data => {
+                data.forEach(doc => {
+                    batch.delete(db.doc(`/likes/${doc.id}`))
+                })
+                return db.collection('notifications').where('babbleId', '==', babbleId).get()
+            })
+            .then(data => {
+                data.forEach(doc => {
+                    batch.delete(db.doc(`/notifications/${doc.id}`))
+                })
+                return batch.commit();
+            })
+            .catch(err => console.error(err));
+            
+    })
+    
+    
